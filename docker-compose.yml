@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # 1. The Database
+  mongo:
+    image: mongo:latest
+    container_name: analytics_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # 2. The Backend API
+  backend:
+    build: ./backend
+    container_name: analytics_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/user_analytics
+    depends_on:
+      - mongo
+
+  # 3. The Dashboard
+  frontend:
+    build: ./dashboard
+    container_name: analytics_dashboard
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  # 4. The Test Website (Hosts test.html & tracker.js)
+  test-site:
+    build: ./tracker
+    container_name: analytics_test_site
+    ports:
+      - "8080:80" # Maps port 8080 on your laptop to port 80 inside container
+
+volumes:
+  mongo-data:
