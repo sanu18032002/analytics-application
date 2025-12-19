@@ -3,11 +3,19 @@ import { useState } from 'react';
 import axios from 'axios';
 import Link from 'next/link';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
 export default function Heatmap() {
     const [urlInput, setUrlInput] = useState('');
     const [points, setPoints] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
+
+    const CONTAINER_WIDTH = 1280;
+    const docW = points.length ? Math.max(...points.map(p => p.doc_w || 0), 0) : 0;
+    const docH = points.length ? Math.max(...points.map(p => p.doc_h || 0), 0) : 0;
+    const scale = docW ? (CONTAINER_WIDTH / docW) : 1;
+    const containerHeight = docH ? Math.max(600, Math.round(docH * scale)) : 2000;
 
     const fetchHeatmap = async (e) => {
         e.preventDefault();
@@ -15,7 +23,7 @@ export default function Heatmap() {
         setIsLoaded(false);
         try {
             const encodedUrl = encodeURIComponent(urlInput);
-            const res = await axios.get(`http://localhost:5000/api/events/heatmap?url=${encodedUrl}`);
+            const res = await axios.get(`${API_BASE_URL}/api/events/heatmap?url=${encodedUrl}`);
             setPoints(res.data);
             setIsLoaded(true);
         } catch (err) {
@@ -64,7 +72,7 @@ export default function Heatmap() {
                     // but the DIV scrolls, keeping dots and iframe synced.
                     <div
                         className="relative mx-auto bg-white shadow-xl"
-                        style={{ width: '1280px', height: '2000px' }}
+                        style={{ width: `${CONTAINER_WIDTH}px`, height: `${containerHeight}px` }}
                     >
                         {/* Layer 1: The Website (Iframe) */}
                         <iframe
@@ -76,12 +84,20 @@ export default function Heatmap() {
 
                         {/* Layer 2: The Heatmap Dots */}
                         {points.map((pt, i) => (
+                            (() => {
+                                const left = (typeof pt.rel_x === 'number' && isFinite(pt.rel_x))
+                                    ? pt.rel_x * CONTAINER_WIDTH
+                                    : (typeof pt.position_x === 'number' ? pt.position_x * scale : 0);
+                                const top = (typeof pt.rel_y === 'number' && isFinite(pt.rel_y))
+                                    ? pt.rel_y * containerHeight
+                                    : (typeof pt.position_y === 'number' ? pt.position_y * scale : 0);
+                                return (
                             <div
                                 key={i}
                                 className="absolute rounded-full border border-white/20"
                                 style={{
-                                    left: `${pt.position_x}px`,
-                                    top: `${pt.position_y}px`,
+                                    left: `${left}px`,
+                                    top: `${top}px`,
                                     width: '24px',
                                     height: '24px',
                                     backgroundColor: 'rgba(255, 0, 0, 0.6)', // Semi-transparent red
@@ -89,8 +105,14 @@ export default function Heatmap() {
                                     transform: 'translate(-50%, -50%)',
                                     zIndex: 50
                                 }}
-                                title={`x: ${pt.position_x}, y: ${pt.position_y}`}
+                                title={
+                                    typeof pt.rel_x === 'number' && typeof pt.rel_y === 'number'
+                                        ? `rel_x: ${pt.rel_x.toFixed(3)}, rel_y: ${pt.rel_y.toFixed(3)}`
+                                        : `x: ${pt.position_x}, y: ${pt.position_y}`
+                                }
                             />
+                                );
+                            })()
                         ))}
                     </div>
                 )}

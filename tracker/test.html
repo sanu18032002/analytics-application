@@ -36,6 +36,11 @@
         <button class="btn">Buy Item B</button>
     </div>
 
+    <script>
+        // Configure the tracker endpoint without modifying tracker.js
+        // For Docker Compose local dev, this is the host-mapped backend port.
+        window.__ANALYTICS_API_BASE_URL__ = 'http://localhost:5000';
+    </script>
     <script src="tracker.js"></script>
 </body>
 

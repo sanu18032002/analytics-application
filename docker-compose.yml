@@ -9,6 +9,12 @@ services:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # 2. The Backend API
   backend:
@@ -18,17 +24,33 @@ services:
       - "5000:5000"
     environment:
       - MONGO_URI=mongodb://mongo:27017/user_analytics
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:8080
     depends_on:
       - mongo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # 3. The Dashboard
   frontend:
-    build: ./dashboard
     container_name: analytics_dashboard
     ports:
       - "3000:3000"
+    environment:
+      # Used by browser/client components
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
+      # Used by Next.js server components / server-side fetch inside the container network
+      - API_BASE_URL=http://backend:5000
+    build:
+      context: ./dashboard
+      args:
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:5000
     depends_on:
       - backend
+    restart: unless-stopped
 
   # 4. The Test Website (Hosts test.html & tracker.js)
   test-site:
