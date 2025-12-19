@@ -4,12 +4,14 @@ import axios from 'axios';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
 export default function Home() {
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
-    axios.get('http://localhost:5000/api/sessions')
-      .then((res) => setSessions(res.data))
+    axios.get(`${API_BASE_URL}/api/sessions`)
+      .then((res) => setSessions(res.data.data || res.data))
       .catch((err) => console.error("API Error:", err));
   }, []);
 

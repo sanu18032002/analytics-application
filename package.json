@@ -1,6 +1,7 @@
 {
-  "name": "backend",
+  "name": "analytics-application",
   "version": "1.0.0",
+  "description": "A user analytics platform that tracks page views and clicks, and visualizes user journeys and heatmaps.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -8,10 +9,8 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "mongoose": "^9.0.2"
   },

@@ -17,6 +17,30 @@ The easiest way to run the entire stack is using Docker Compose.
 
 - docker-compose up --build
 
+---
+
+## 🔧 Configuration (Environment Variables)
+
+For local Docker usage, `docker-compose.yml` already sets sane defaults.
+
+### Backend (`backend/server.js`)
+
+- **`MONGO_URI`**: Mongo connection string (default: `mongodb://127.0.0.1:27017/user_analytics`)
+- **`CORS_ORIGINS`**: Comma-separated allowlist for browser origins (example: `http://localhost:3000,http://localhost:8080`)
+- **`JSON_BODY_LIMIT`**: Request body limit (default: `64kb`)
+- **`EVENT_TTL_SECONDS`**: Event retention in seconds (default: 30 days)
+
+Example file: `backend/env.example`
+
+### Dashboard (`dashboard/app/*`)
+
+- **`NEXT_PUBLIC_API_BASE_URL`**: Browser API base URL (used by client components)
+- **`API_BASE_URL`**: Server-side API base URL (used by Next server components)
+
+Example file: `dashboard/env.example`
+
+Important: `NEXT_PUBLIC_*` values are inlined into the client bundle at **build time**. In Docker, this repo passes it as a build arg in `docker-compose.yml`.
+
 
 ### Access the Services
 
